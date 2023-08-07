@@ -4,17 +4,33 @@
 // @desc:
 package classpath
 
-type WildcardEntry struct {
-	absDir string
-}
+import (
+	"os"
+	"path/filepath"
+	"strings"
+)
 
-func newWildcardEntry(path string) *WildcardEntry {
-	return nil
-}
-func (we *WildcardEntry) readClass(className string) ([]byte, Entry, error) {
-	return nil, nil, nil
-}
+func newWildcardEntry(path string) CompositeEntry {
 
-func (we *WildcardEntry) String() string {
-	return ""
+	baseDir := path[:len(path)-1]
+	var compositeEntry []Entry
+
+	walkFn := func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() && path != baseDir {
+			return filepath.SkipDir
+		}
+		if strings.HasSuffix(path, ".jar") || strings.HasSuffix(path, ".JAR") {
+			jarEntry := newZipEntry(path)
+			compositeEntry = append(compositeEntry, jarEntry)
+		}
+		return nil
+	}
+	err := filepath.Walk(baseDir, walkFn)
+	if err != nil {
+		return nil
+	}
+	return compositeEntry
 }
