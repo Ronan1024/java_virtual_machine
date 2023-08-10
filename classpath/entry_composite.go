@@ -24,7 +24,7 @@ func (ce CompositeEntry) readClass(className string) ([]byte, Entry, error) {
 
 	for _, entry := range ce {
 		data, form, err := entry.readClass(className)
-		if err != nil {
+		if err == nil {
 			return data, form, err
 		}
 	}

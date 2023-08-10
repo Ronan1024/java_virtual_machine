@@ -7,7 +7,7 @@ package classpath
 import (
 	"archive/zip"
 	"errors"
-	"io"
+	"io/ioutil"
 	"path/filepath"
 )
 
@@ -26,22 +26,25 @@ func newZipEntry(path string) *ZipEntry {
 	return &ZipEntry{abs}
 }
 func (ze *ZipEntry) readClass(className string) ([]byte, Entry, error) {
-	reader, err := zip.OpenReader(ze.absPath)
+	r, err := zip.OpenReader(ze.absPath)
 	if err != nil {
 		return nil, nil, err
 	}
-	defer reader.Close()
-	for _, file := range reader.File {
-		if file.Name == className {
-			readClose, err := file.Open()
+
+	defer r.Close()
+	for _, f := range r.File {
+		if f.Name == className {
+			rc, err := f.Open()
 			if err != nil {
 				return nil, nil, err
 			}
-			defer readClose.Close()
-			data, err := io.ReadAll(readClose)
+
+			defer rc.Close()
+			data, err := ioutil.ReadAll(rc)
 			if err != nil {
 				return nil, nil, err
 			}
+
 			return data, ze, nil
 		}
 	}
